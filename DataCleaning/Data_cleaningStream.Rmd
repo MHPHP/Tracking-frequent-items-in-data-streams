@@ -1,0 +1,84 @@
+
+This file aims to prepare data to look like a data stream.
+
+```{r}
+library(dplyr)
+library(stringr)
+library(tidyverse)
+```
+
+```{r}
+training_data <- read.csv("../ProcessedData/training_data.csv", header = TRUE, sep = ',')
+
+validation_data <- read.csv("../ProcessedData/validation_data.csv", header = TRUE, sep = ',')
+```
+
+```{r}
+query_train <- training_data$Query
+
+query_validation <- validation_data$Query
+```
+
+Removes all punctuation chars, [:punct:] = ! " # $ % & ' ( ) * + , - . / : ; < = > ? @ [ \ ] ^ _ ` { | } ~, using regular expressions. 
+Removes www and .com.
+
+```{r}
+query_train <- str_replace_all(query_train, "[:punct:]", "")
+query_train <- str_replace_all(query_train, "www", "")
+query_train <- str_replace_all(query_train, ".com", "")
+query_train <- str_replace_all(query_train, "[^a-zA-Z0-9 -]", "")
+```
+
+```{r}
+query_validation <- str_replace_all(query_validation, "[:punct:]", "")
+query_validation <- str_replace_all(query_validation, "www", "")
+query_validation <- str_replace_all(query_validation, ".com", "")
+query_validation <- str_replace_all(query_validation, "[^a-zA-Z0-9 -]", "")
+```
+
+Trim all whitespace: 
+
+
+```{r}
+test <- testDf %>%  separate_rows(Query)
+```
+
+
+Split rows on space
+```{r}
+training_data <-  training_data %>% separate_rows(Query)
+validation_data <-  validation_data %>% separate_rows(Query) 
+```
+
+
+```{r}
+training_data$Query <- trimws(training_data$Query)
+validation_data$Query <- trimws(validation_data$Query)
+```
+
+Removes rows if now empty:
+
+
+```{r}
+query_train <- query_train[(nzchar(query_train)==TRUE)]  # non-empty rows
+```
+
+```{r}
+entries <- which(nzchar(query_validation)==TRUE)  # non-empty rows
+query_validation <- query_validation[entries, ]  # keep only non-empty rows
+```
+
+
+
+```{r}
+write.csv(query_train, "../ProcessedData/query_train.csv", row.names = FALSE)
+```
+
+```{r}
+write.csv(query_validation, "../ProcessedData/query_validation.csv", row.names = FALSE)
+```
+
+```{r}
+write.csv(checkData, "../ProcessedData/checkData.csv", row.names = FALSE)
+```
+

@@ -1,0 +1,88 @@
+
+```{r}
+library(dplyr)
+library(stringr)
+library(tidyverse)
+```
+
+
+This code should prepare two data files. Both data files are cleaning data, so it only contains letters and each query is a single word. One file has queries with their frequency, and the other only has queris but allow for duplicate, i.e. how you will see the data in the real world.
+
+
+
+```{r}
+create_query_with_freq <- function(datafile, outputfile){
+  data <- read.csv(datafile, header = TRUE, sep = ',')
+  
+  test2 <- data.frame(table(data$Query))
+  colnames(test2) <- c("query", "frequency")
+  
+  #clean data
+  test2$query <- str_replace_all(test2$query, "[:punct:]", "")
+  test2$query <- str_replace_all(test2$query, "www", "")
+  test2$query <- str_replace_all(test2$query, ".com", "")
+  test2$query <- str_replace_all(test2$query, "[^a-zA-Z -]", "")
+  
+  #Remove empty rows
+  entries <- which(nzchar(test2$query)==TRUE)  # non-empty rows
+  test2 <- test2[entries, ]  # keep only non-empty rows
+  
+  training_data <-  test2 %>% separate_rows(query)
+  training_data$query <- trimws(training_data$query)
+
+  entries <- which(nzchar(training_data$query)==TRUE)  # non-empty rows
+  
+
+  training_data <- training_data[entries, ]  # keep only non-empty rows
+
+  training_data2 <- training_data %>% group_by(query) %>% summarise(frequency = sum(frequency))
+
+  
+  print(length(training_data2$query))
+  print(sum(training_data2$frequency))
+  write.csv(training_data2, outputfile, row.names = FALSE)
+  return(training_data2)
+}
+```
+
+```{r}
+experiment_data_with_freq <-  create_query_with_freq("../ProcessedData/raw_data_03_25_to_04_25.csv", "../ProcessedData/experiment_data_03_25_to_04_25_clean_words_with_freq.csv" )
+```
+
+
+##### Create query train
+
+input file = "../ProcessedData/raw_data_03_25.csv"
+
+output file = "../ProcessedData/experiment_data_03_25_clean_words_no_freq.csv"
+
+```{r}
+create_query_no_freq <- function(datafile, outputfile) {
+  test2 <- read.csv(datafile, header = TRUE, sep = ',')
+  test2 <- test2[,c("AnonID", "Query")]
+  colnames(test2) <- c("id", "query")
+  
+  test2$query <- str_replace_all(test2$query, "[:punct:]", "")
+  test2$query <- str_replace_all(test2$query, "www", "")
+  test2$query <- str_replace_all(test2$query, ".com", "")
+  test2$query <- str_replace_all(test2$query, "[^a-zA-Z -]", "")
+  
+  entries <- which(nzchar(test2$query)==TRUE)  # non-empty rows
+  test2 <- test2[entries, ]  # keep only non-empty rows
+  
+  training_data <-  test2 %>% separate_rows(query)
+  training_data$query <- trimws(training_data$query)
+  entries <- which(nzchar(training_data$query)==TRUE)  # non-empty rows
+  training_data <- training_data[entries, ]  # keep only non-empty rows
+  training_data <- training_data$query
+
+  write.csv(training_data, outputfile, row.names = FALSE)
+  print(length(training_data))
+  return(data.frame(training_data))
+}
+```
+
+```{r}
+no_freq <- create_query_no_freq("../ProcessedData/raw_data_03_25_to_04_25.csv", "../ProcessedData/experiment_data_03_25_to_04_25_clean_words_no_freq.csv" )
+```
+

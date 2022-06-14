@@ -1,0 +1,153 @@
+
+Get constant to normalise for number of updates and number of queries:
+```{r}
+with_freq <- read.csv("../ProcessedData/experiment_data_03_25_clean_words_with_freq.csv")
+no_freq <- read.csv("../ProcessedData/experiment_data_03_25_clean_words_no_freq.csv")
+updates = length(no_freq$x)
+items = length(with_freq$query)
+```
+
+
+Load theme for plots
+```{r}
+my_theme = theme(legend.title = element_text(size = 15, face = "bold"),
+        axis.text.x = element_text(size = 15,  face = "bold"),
+        axis.text.y = element_text(size = 15,  face = "bold"),
+        axis.title.x = element_text(size = 15,  face = "bold"),
+        axis.title.y = element_text(size = 13,  face = "bold"),
+        title = element_blank(),
+        legend.text = element_text(size = 15, face = "bold"))
+```
+
+Load data for constant eps
+```{r}
+CMS_const_eps <- read.csv("../ResultData/countMinSketchConstantEps2.csv")
+```
+
+Get the average over all runs
+
+```{r}
+CMS_const_eps_avg <-  CMS_const_eps %>% group_by(epsilon, delta) %>% dplyr::summarise(across(where(is.numeric), mean))
+```
+
+
+Plot for average query time per item.
+```{r}
+
+plot_labels <- paste0("1/2^", seq(2,19,2))
+r <- 1/2^seq(2,19, 2)
+
+
+plot_cms_query_time <- ggplot(data = CMS_const_eps_avg, mapping = aes(y = queryTime/items * 1000, x = delta, colour = factor(epsilon), group = epsilon)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  #scale_y_continuous(trans='log2') +
+  scale_x_continuous(trans='log2',
+                     breaks=r,
+                     labels=parse(text=plot_labels)) +
+  labs(title = "Average query time to delta for Count Min sketch", subtitle = "", x="delta", y="Average query time per item (microseconds)") +
+  labs(color='Epsilon') +
+  theme_light() +
+  my_theme 
+  #coord_cartesian(xlim = c(0,0.2),ylim = c(500, 1800))
+
+plot_cms_query_time
+
+#ggsave("images/countMinQueryTime.png", plot_cms_query_time, width = 15, height = 10, units = "cm")
+```
+
+
+Plot for average update time per item
+```{r}
+ 
+plot_labels <- paste0("1/2^", seq(2,19,2))
+r <- 1/2^seq(2,19, 2)
+
+
+plot_cms_update_time <- ggplot(data = CMS_const_eps_avg, mapping = aes(y = updateTime/updates * 1000, x = delta, colour = factor(epsilon), group = epsilon)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  #scale_y_continuous(trans='log2') +
+  scale_x_continuous(trans='log2',
+                     breaks=r,
+                     labels=parse(text=plot_labels)) +
+  labs(title = "Average update time to delta for Count Min sketch", subtitle = "", x="delta", y="Average update time (microseconds)") +
+  labs(color='Epsilon') +
+  theme_light() +
+  my_theme 
+  #coord_cartesian(xlim = c(0,0.2),ylim = c(500, 1800))
+
+plot_cms_update_time
+
+#ggsave("images/countMinUpdateTime.png", plot_cms_update_time, width = 15, height = 10, units = "cm")
+```
+
+
+
+
+### All the same for count sketch
+
+Load data for constant eps
+```{r}
+CountSketch_const_eps <- read.csv("../ResultData/countMedianSketchConstantEps2.csv")
+```
+
+Get the average over all runs
+
+```{r}
+CountSketch_const_eps_avg <-  CountSketch_const_eps %>% group_by(epsilon, delta) %>% dplyr::summarise(across(where(is.numeric), mean))
+```
+
+
+Plot for average query time per item.
+```{r}
+
+plot_labels <- paste0("1/2^", seq(2,19,2))
+r <- 1/2^seq(2,19, 2)
+
+
+plot_count_query_time <- ggplot(data = CountSketch_const_eps_avg, mapping = aes(y = queryTime/items * 1000, x = delta, colour = factor(epsilon), group = epsilon)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  #scale_y_continuous(trans='log2') +
+  scale_x_continuous(trans='log2',
+                     breaks=r,
+                     labels=parse(text=plot_labels)) +
+  labs(title = "Average query time to delta for Count sketch", subtitle = "", x="delta", y="Average query time per item (microseconds)") +
+  labs(color='Epsilon') +
+  theme_light() +
+  my_theme 
+  #coord_cartesian(xlim = c(0,0.2),ylim = c(500, 1800))
+
+plot_count_query_time
+
+#ggsave("images/countQueryTime.png", plot_count_query_time, width = 15, height = 10, units = "cm")
+```
+
+
+Plot for average update time per item
+```{r}
+ 
+plot_labels <- paste0("1/2^", seq(2,19,2))
+r <- 1/2^seq(2,19, 2)
+
+
+plot_count_update_time <- ggplot(data = CountSketch_const_eps_avg, mapping = aes(y = updateTime/updates * 1000, x = delta, colour = factor(epsilon), group = epsilon)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  #scale_y_continuous(trans='log2') +
+  scale_x_continuous(trans='log2',
+                     breaks=r,
+                     labels=parse(text=plot_labels)) +
+  labs(title = "Average update time to delta for Count sketch", subtitle = "", x="delta", y="Average update time (microseconds)") +
+  labs(color='Epsilon') +
+  theme_light() +
+  my_theme 
+  #coord_cartesian(xlim = c(0,0.2),ylim = c(500, 1800))
+
+plot_count_update_time
+
+#ggsave("images/countUpdateTime.png", plot_count_update_time, width = 15, height = 10, units = "cm")
+```
+
+

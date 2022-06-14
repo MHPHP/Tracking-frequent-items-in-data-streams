@@ -1,0 +1,27 @@
+
+
+This file fixed an error introduced when we used Pandas in pyhton, namely that a query with string string "null" would be treated as a null value. 
+
+```{r}
+sum(experiment_data_with_freq$frequency)
+```
+```{r}
+delelte_row_names <- read.csv("../MachineLearning/MLPredictions.csv")
+delelte_row_names <- delelte_row_names[,c(2,3)]
+```
+
+```{r}
+entries <- which(nzchar(delelte_row_names$x)==FALSE)  # non-empty rows
+delelte_row_names$x[entries] <- "null"  # keep only non-empty rows
+```
+
+
+```{r}
+colnames(delelte_row_names) <- c("query", "prediction")
+```
+
+
+```{r}
+write.csv(delelte_row_names, "../ProcessedData/experiment_data_03_25_clean_words_with_predictions.csv", row.names = FALSE)
+```
+

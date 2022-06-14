@@ -1,0 +1,493 @@
+---
+title: "Data visualizations"
+author: "Laura Nilsson"
+date: '2022-05-10'
+output: html_document
+---
+
+The following code produced the graphs for the experiment section of our bachelor thesis. It might be that all figures in the section can't be made by running this file once, but you need to change some parameters to get the different figures. The code is not made to be well structured and was used for generating the figures once. Some parts of the code might not be used at all.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(ggplot2)
+library(patchwork)
+library(knitr)
+library(readr)
+library(gridExtra)
+library(readxl)
+library(dplyr)
+library(dbplyr)
+library(plyr)
+```
+
+
+Load the data
+
+```{r}
+CMsketch <- read.csv("../ResultData/countMinSketch.csv")
+
+Csketch <- read.csv("../ResultData/countMedianSketch.csv")
+
+CMS_const_eps <- read.csv("../ResultData/countMinSketchConstantEps.csv")
+
+```
+
+The following plots show memory usage based on different values of epsilon and delta. 
+
+```{r}
+plots <- function(titel, undertitel, data, x, y, column_name=NULL, point_color, constant_color=NULL, alpha=0.5) {
+  plt <- ggplot(data = data) +
+         geom_point(mapping = aes(x = x, y = y), color = point_color, alpha = alpha) +
+         labs(title = titel, subtitle = undertitel, x = "memory", y = column_name)
+  return(plt)
+}
+
+plots("Count Min Sketch", " ", CMsketch, CMsketch$memory, CMsketch$relativeError, "Relative error", point_color="black")
+
+plots("Count Sketch", " ", Csketch, Csketch$memory, Csketch$relativeError, "Relative error", point_color="red")
+
+plots("Count Min Sketch - constant epsilon", " ", CMS_const_eps, CMS_const_eps$memory, CMS_const_eps$relativeError, "Relative error", point_color="blue")
+```
+
+Fancy version of plot function
+
+```{r}
+plots_fancy <- function(data, x, y, titel, undertitel=NULL, constant_color=NULL, point_color=NULL, xtitle=NULL, ytitle=NULL, ylim=50000) {
+  plt <- ggplot(data = data) +
+         geom_line(mapping = aes(x = x, y = y, colour = data$delta)) +
+         geom_point(mapping = aes(x = x, y = y), colour=point_color) +
+         scale_y_continuous(trans='log2')+ 
+         labs(title = titel, subtitle = undertitel, x=xtitle, y=ytitle) + theme_classic()
+  return(plt)
+}
+
+plots_fancy(CMsketch, CMsketch$memory, CMsketch$averageError, "Count Min Sketch - average error and memory", point_color="red", xtitle="Memory usage", ytitle="Average error")
+```
+
+```{r}
+plots_fancy(Csketch, Csketch$memory, Csketch$averageError, "Count Sketch - average error and memory", point_color="blue", xtitle="Memory usage", ytitle="Average error")
+```
+
+```{r}
+plots_fancy(CMS_const_eps, CMS_const_eps$memory, CMS_const_eps$averageError, "Count Min Sketch - average error and memory for constant epsilon", point_color="blue", xtitle="Memory usage", ytitle="Average error")
+```
+
+```{r}
+plots_legend <- function(data, x, y, titel, undertitel=NULL, constant_color=NULL, point_color=NULL, xtitle=NULL, ytitle=NULL, group=NULL) {
+  plt <- ggplot(data = data) +
+         geom_line(mapping = aes(x = x, y = y, fill=group)) +
+         geom_point(mapping = aes(x = x, y = y), colour=point_color) +
+         labs(title = titel, subtitle = undertitel, x=xtitle, y=ytitle) + theme_classic()
+  return(plt)
+}
+```
+
+
+```{r}
+CMS_const_delta <- read.csv("../ResultData/countMinSketchConstantDelta.csv")
+```
+
+
+```{r}
+CMS_const_delta_avg <-  CMS_const_delta %>% group_by(epsilon, delta) %>% dplyr::summarise(across(where(is.numeric), mean))
+```
+
+
+```{r}
+plt <- ggplot(data = CMS_const_delta_avg, mapping = aes(x = memory/2^20, y = averageError, colour = factor(delta), group = delta)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  scale_y_continuous(trans='log2') +
+  labs(title = "Average Error compared to memory for Count Min sketch", subtitle = "", x="Memory used (MB)", y="Average Error") +
+  labs(color='Delta') +
+  theme_light() +
+  my_theme +
+  coord_cartesian(xlim = c(0, (1*10^6)/2^20), ylim = c(1, 6 * 10^4))
+
+##ggsave("images/countMinMemory.png", plt, width = 15, height = 10, units = "cm")
+plt
+```
+```{r}
+Csketch <- read.csv("../ResultData/countMedianSketchConstantDelta.csv")
+```
+
+
+```{r}
+my_theme = theme(legend.title = element_text(size = 15, face = "bold"),
+        axis.text.x = element_text(size = 15,  face = "bold"),
+        axis.text.y = element_text(size = 15,  face = "bold"),
+        axis.title.x = element_text(size = 15,  face = "bold"),
+        axis.title.y = element_text(size = 15,  face = "bold"),
+        title = element_blank(),
+        legend.text = element_text(size = 15, face = "bold"))
+```
+
+
+```{r}
+CSketch_const_delta_avg <-  Csketch %>% group_by(epsilon, delta) %>% dplyr::summarise(across(where(is.numeric), mean))
+```
+
+
+```{r}
+plt2 <- ggplot(data = CSketch_const_delta_avg, mapping = aes(x = memory/2^20, y = averageError, colour = factor(delta), group = delta)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_y_continuous(trans='log2') +
+  #scale_x_continuous(trans='log2') +
+  labs(title = "Average Error compared to memory for Count Sketch", subtitle = "", x="Memory used (MB)", y="Average Error") +
+  labs(color='Delta') +
+  theme_light() +
+  my_theme +
+  coord_cartesian(xlim = c(0, (1*10^6)/2^20), ylim = c(1, 0.5 * 10^4)) 
+
+  
+##ggsave("images/countSketchMemory.png", plt2, width = 15, height = 10, units = "cm")
+plt2
+```
+
+
+```{r}
+grid.arrange(plt,plt2, nrow = 1)
+```
+
+# Create plot for running time:
+
+
+```{r}
+CMS_const_eps <- read.csv("../ResultData/countMinSketchConstantEps.csv")
+```
+
+```{r}
+CMS_const_eps_avg <-  CMS_const_eps %>% group_by(epsilon, delta) %>% dplyr::summarise(across(where(is.numeric), mean))
+```
+
+
+```{r}
+plotcms_update_time <- ggplot(data = CMS_const_eps, mapping = aes(x = updateTime, y = averageError, colour = factor(epsilon), group = epsilon)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  scale_y_continuous(trans='log2') +
+  labs(title = "Average Error compared to update Time for Count Min sketch", subtitle = "", x="update Time (ms)", y="Average Error") +
+  labs(color='Epsilon') +
+  theme_light() +
+  my_theme +
+  coord_cartesian(xlim = c(500, 1500), ylim = c(18 * 10^-2, 6 * 10^4))
+plotcms_update_time
+
+##ggsave("images/countMinUpdateTime.png", plotcms_update_time, width = 15, height = 10, units = "cm")
+```
+
+
+```{r}
+
+plot_labels <- paste0("1/2^", seq(2,19,2))
+r <- 1/2^seq(2,19, 2)
+
+plot_cms_update_time <- ggplot(data = CMS_const_eps_avg, mapping = aes(y = updateTime, x = delta, colour = factor(epsilon), group = epsilon)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  #scale_y_continuous(trans='log2') +
+  scale_x_continuous(trans='log2',                
+                     breaks=r,
+                     labels=parse(text=plot_labels)) +
+  labs(title = "Average Error compared to update Time for Count Min sketch", subtitle = "", x="delta", y="update time (ms)") +
+  labs(color='Epsilon') +
+  theme_light() +
+  my_theme 
+  #coord_cartesian(xlim = c(0,0.2),ylim = c(500, 1800))
+
+plot_cms_update_time
+
+#ggsave("images/countMinUpdateTime.png", plot_cms_update_time, width = 15, height = 10, units = "cm")
+```
+
+
+```{r}
+
+plot_labels <- paste0("1/2^", seq(2,19,2))
+r <- 1/2^seq(2,19, 2)
+
+
+plot_cms_query_time <- ggplot(data = CMS_const_eps_avg, mapping = aes(y = queryTime, x = delta, colour = factor(epsilon), group = epsilon)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  #scale_y_continuous(trans='log2') +
+  scale_x_continuous(trans='log2',
+                     breaks=r,
+                     labels=parse(text=plot_labels)) +
+  labs(title = "Average Error compared to query Time for Count Min sketch", subtitle = "", x="delta", y="Average query time per item (ms)") +
+  labs(color='Epsilon') +
+  theme_light() +
+  my_theme 
+  #coord_cartesian(xlim = c(0,0.2),ylim = c(500, 1800))
+
+plot_cms_query_time
+
+#ggsave("images/countMinQueryTime.png", plot_cms_query_time, width = 15, height = 10, units = "cm")
+```
+
+
+
+
+
+
+```{r}
+Csketch_const_eps <- read.csv("../ResultData/countMedianSketchConstantEps.csv")
+```
+
+
+```{r}
+Csketch_const_eps_avg <-  Csketch_const_eps %>% group_by(epsilon, delta) %>% dplyr::summarise(across(where(is.numeric), mean))
+```
+
+
+}
+```{r}
+
+plot_labels <- paste0("1/2^", seq(2,19,2))
+r <- 1/2^seq(2,19, 2)
+
+plot_cSketch_update_time <- ggplot(data = Csketch_const_eps_avg, mapping = aes(y = updateTime/, x = delta, colour = factor(epsilon), group = epsilon)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  #scale_y_continuous(trans='log2') +
+  scale_x_continuous(trans='log2',                
+                     breaks=r,
+                     labels=parse(text=plot_labels)) +
+  labs(title = "Average Error compared to update Time for Count Min sketch", subtitle = "", x="delta", y="update time (ms)") +
+  labs(color='Epsilon') +
+  theme_light() +
+  my_theme 
+  #coord_cartesian(xlim = c(0,0.2),ylim = c(500, 1800))
+
+plot_cSketch_update_time
+
+#ggsave("images/countSketchUpdateTime.png", plot_cSketch_update_time, width = 15, height = 10, units = "cm")
+```
+
+
+```{r}
+updates = length(no_freq)
+items = length(with_freq)
+```
+
+
+```{r}
+plot_labels <- paste0("1/2^", seq(2,19,2))
+r <- 1/2^seq(2,19, 2)
+
+
+plot_cSketch_query_time <- ggplot(data = Csketch_const_eps_avg, mapping = aes(y = queryTime/items, x = delta, colour = factor(epsilon), group = epsilon)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  #scale_y_continuous(trans='log2') +
+  scale_x_continuous(trans='log2',
+                     breaks=r,
+                     labels=parse(text=plot_labels)) +
+  labs(title = "Average Error compared to update Time for Count Min sketch", subtitle = "", x="delta", y="average query time per item (ms)") +
+  labs(color='Epsilon') +
+  theme_light() +
+  my_theme 
+  #coord_cartesian(xlim = c(0,0.2),ylim = c(500, 1800))
+
+plot_cSketch_query_time
+
+#ggsave("images/countSkecthQueryTime.png", plot_cSketch_query_time, width = 15, height = 10, units = "cm")
+```
+
+
+
+#For the machine Learning part
+
+```{r}
+CMS_const_delta <- read.csv("../ResultData/countMinSketchConstantDelta2.csv")
+Csketch <- read.csv("../ResultData/countMedianSketchConstantDelta2.csv")
+cMinLearn_constant_delta <- read.csv("../ResultData/countMinLearnSketchConstantDelta.csv")
+cSketchLearn_constant_delta <- read.csv("../ResultData/countSketchLearnSketchConstantDelta.csv")
+```
+
+
+
+
+
+```{r}
+# Combine data for different delta
+
+
+Cmin_const_delta_avg <-  CMS_const_delta %>% group_by(epsilon) %>% dplyr::summarise(across(where(is.numeric), mean))
+Cmin_const_delta_avg$type = "CMS"
+
+
+Csketch_const_delta_avg <-  Csketch %>% group_by(epsilon) %>% dplyr::summarise(across(where(is.numeric), mean))
+Csketch_const_delta_avg$type = "CS"
+
+
+CminLearn_const_delta_avg <-  cMinLearn_constant_delta %>% group_by(epsilon) %>% dplyr::summarise(across(where(is.numeric), mean))
+CminLearn_const_delta_avg$type = "Learned CMS"
+CminLearn_const_delta_avg$memory = CminLearn_const_delta_avg$memory 
+
+
+
+CSketchLearn_const_delta_avg <-  cSketchLearn_constant_delta %>% group_by(epsilon) %>% dplyr::summarise(across(where(is.numeric), mean))
+CSketchLearn_const_delta_avg$type = "Learned CS"
+CSketchLearn_const_delta_avg$memory = CSketchLearn_const_delta_avg$memory
+
+
+combinedMemory <-  bind_rows(Cmin_const_delta_avg, Csketch_const_delta_avg, CminLearn_const_delta_avg, CSketchLearn_const_delta_avg)
+```
+
+Create plot with all different sketch structures
+```{r}
+skecth_memory <- ggplot(data = combinedMemory, mapping = aes(x = memory/2^20, y = averageError, colour = factor(type), group =type)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_y_continuous(trans='log2') +
+  #scale_x_continuous(trans='log2') +
+  labs(title = "Average Error compared to memory for Count Sketch", subtitle = "", x="Memory used (MB)", y="Average Error") +
+  labs(color='Sketch Type') +
+  theme_light() +
+  my_theme +
+  #coord_cartesian(xlim = c(0, (10*10^5)/2^20), ylim = c(0, 64))
+  coord_cartesian(xlim = c(0, (1.5*10^6)/2^20), ylim = c(2, 6 * 10^4)) 
+
+  
+#ggsave("images/SketchMemoryALL_withLearnMemory.png", skecth_memory, width = 17, height = 10, units = "cm")
+skecth_memory
+```
+
+
+
+```{r}
+CSketchLearn2 <-  cSketchLearn_constant_delta %>% group_by(epsilon, threshold) %>% dplyr::summarise(across(where(is.numeric), mean))
+CSketchLearn2$type = "Learned CS"
+CSketchLearn2$memory = CSketchLearn2$memory + 235144
+```
+
+
+```{r}
+skecth_memory2 <- ggplot(data = CSketchLearn2, mapping = aes(x = memory/2^20, y = averageError, colour = factor(threshold), group = threshold)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_y_continuous(trans='log2') +
+  #scale_x_continuous(trans='log2') +
+  labs(title = "Average Error compared to memory for Count Sketch", subtitle = "", x="Memory used (MB)", y="Average Error") +
+  labs(color='Sketch Type') +
+  theme_light() +
+  my_theme +
+  #coord_cartesian(xlim = c(0, (10*10^5)/2^20), ylim = c(0, 64))
+  coord_cartesian(xlim = c(0, (1*10^6)/2^20), ylim = c(2, 6 * 10^4)) 
+
+  
+#ggsave("images/SketchMemoryALL_withLearnMemory2.png", skecth_memory, width = 17, height = 10, units = "cm")
+skecth_memory2
+```
+
+###### ALL new plot where we focus a single threshold.
+
+
+```{r}
+cSketchLearn_constant_delta_thres <- cSketchLearn_constant_delta[cSketchLearn_constant_delta$threshold == 0.0001,] 
+```
+
+
+
+
+```{r}
+CSketchLearn3 <-  cSketchLearn_constant_delta_thres %>% group_by(epsilon, delta) %>% dplyr::summarise(across(where(is.numeric), mean))
+CSketchLearn3$type = "Learned CS"
+CSketchLearn3$memory = CSketchLearn3$memory
+```
+
+```{r}
+skecth_memory2 <- ggplot(data = CSketchLearn3, mapping = aes(x = memory/2^20, y = averageError, colour = factor(delta), group = delta)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_y_continuous(trans='log2') +
+  #scale_x_continuous(trans='log2') +
+  labs(title = "Average Error compared to memory for Count Sketch", subtitle = "", x="Memory used (MB)", y="Average Error") +
+  labs(color='Delta') +
+  theme_light() +
+  my_theme +
+  #coord_cartesian(xlim = c(0, (10*10^5)/2^20), ylim = c(0, 64))
+  coord_cartesian(xlim = c(0, (1*10^6)/2^20), ylim = c(2, 0.1 * 10^4)) 
+
+  
+##ggsave("images/SketchMemory_CS_deltas.png", skecth_memory2, width = 17, height = 10, units = "cm")
+skecth_memory2
+```
+
+
+And for count min sketch
+
+```{r}
+cMinLearn_constant_delta_thres <- cMinLearn_constant_delta[cMinLearn_constant_delta$threshold == 0.0001,] 
+```
+
+
+
+
+```{r}
+CMinLearn3 <-  cMinLearn_constant_delta_thres %>% group_by(epsilon, delta) %>% dplyr::summarise(across(where(is.numeric), mean))
+CMinLearn3$type = "Learned CMS"
+CMinLearn3$memory = CMinLearn3$memory
+```
+
+```{r}
+min_memory2 <- ggplot(data = CMinLearn3, mapping = aes(x = memory/2^20, y = averageError, colour = factor(delta), group = delta)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_y_continuous(trans='log2') +
+  #scale_x_continuous(trans='log2') +
+  labs(title = "Average Error compared to memory for Count Min Sketch", subtitle = "", x="Memory used (MB)", y="Average Error") +
+  labs(color='Delta') +
+  theme_light() +
+  my_theme +
+  #coord_cartesian(xlim = c(0, (10*10^5)/2^20), ylim = c(0, 64))
+  coord_cartesian(xlim = c(0, (1*10^6)/2^20), ylim = c(1, 3 * 10^4)) 
+
+  
+##ggsave("images/SketchMemory_min_deltas.png", min_memory2, width = 17, height = 10, units = "cm")
+min_memory2
+```
+
+```{r}
+delta_value = 0.125
+CMinLearn4 = CMinLearn3[CMinLearn3$delta == delta_value,]
+CSketchLearn4 = CSketchLearn3[CSketchLearn3$delta == delta_value,]
+Csketch4 = Csketch[Csketch$delta == delta_value,]
+CMS_const_delta4 = CMS_const_delta[CMS_const_delta$delta == delta_value,]
+
+
+Csketch4 = Csketch4  %>% group_by(epsilon) %>% dplyr::summarise(across(where(is.numeric), mean))
+Csketch4$type = "CS"
+
+
+CMS_const_delta4 = CMS_const_delta4 %>% group_by(epsilon) %>% dplyr::summarise(across(where(is.numeric), mean))
+CMS_const_delta4$type = "CMS"
+
+combinedMemory4 <-  bind_rows(CMinLearn4, CSketchLearn4, Csketch4, CMS_const_delta4)
+```
+
+
+```{r}
+skecth_memory <- ggplot(data = combinedMemory4, mapping = aes(x = memory/2^20, y = averageError, colour = factor(type), group = type)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_y_continuous(trans='log2') +
+  #scale_x_continuous(trans='log2') +
+  labs(title = "Average Error compared to memory for Count Sketch", subtitle = "", x="Memory used (MB)", y="Average Error") +
+  labs(color='Sketch Type') +
+  theme_light() +
+  my_theme +
+  #coord_cartesian(xlim = c(0, (10*10^5)/2^20), ylim = c(0, 64))
+  coord_cartesian(xlim = c(0, (1*10^6)/2^20), ylim = c(1, 1 * 10^4)) 
+
+  
+##ggsave("images/SketchMemoryALL_withLearnMemoryHighRows.png", skecth_memory, width = 17, height = 10, units = "cm")
+skecth_memory
+```
+
+

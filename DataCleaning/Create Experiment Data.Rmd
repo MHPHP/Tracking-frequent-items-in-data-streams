@@ -1,0 +1,21 @@
+
+```{r}
+all_data <-  read.csv("../ProcessedData/all_aol_data.csv", header = TRUE, sep = ',')
+```
+
+```{r}
+#Convert to date only
+all_data$QueryTime <-  as.Date(all_data$QueryTime)
+```
+
+
+
+# Create experiment data
+```{r}
+experiment1_data <- all_data[all_data$QueryTime  >= as.Date("2006-03-25") & all_data$QueryTime  <= as.Date("2006-04-25"),]
+```
+
+```{r}
+write.csv(experiment1_data,"../ProcessedData/raw_data_03_25_to_04_25.csv", row.names = FALSE)
+```
+

@@ -1,0 +1,105 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.21"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "bachelor",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4,
+						5
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "cMinExperiment::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-cMinExperiment-Debug-4ec400905e3393f5b8c7.json",
+					"name" : "cMinExperiment",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "countMedianExperiment::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-countMedianExperiment-Debug-0d6b7d24280e74251c81.json",
+					"name" : "countMedianExperiment",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "countMinLearnExperiment::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-countMinLearnExperiment-Debug-ae500a5e3f067a6f424f.json",
+					"name" : "countMinLearnExperiment",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "countSketchLearnExperiment::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-countSketchLearnExperiment-Debug-a934ee27652ce5998b44.json",
+					"name" : "countSketchLearnExperiment",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "heavyHitterExperiment1::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-heavyHitterExperiment1-Debug-537916036b9cb152432b.json",
+					"name" : "heavyHitterExperiment1",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "run_main::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-run_main-Debug-3e456f84b3ee33f77269.json",
+					"name" : "run_main",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/malth/Desktop/Bachelor git2/c++_files/cmake-build-debug",
+		"source" : "C:/Users/malth/Desktop/Bachelor git2/c++_files"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

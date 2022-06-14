@@ -1,0 +1,144 @@
+---
+title: "Data visualizations - heavy hitters"
+author: "Laura Nilsson"
+date: '2022-05-29'
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(patchwork)
+library(knitr)
+library(readr)
+library(gridExtra)
+library(readxl)
+library(dplyr)
+library(dbplyr)
+library(plyr)
+
+
+# Loading data
+
+data <- read.csv("heavyHitter.csv")
+```
+
+```{r}
+my_theme = theme(legend.title = element_text(size = 15, face = "bold"),
+        axis.text.x = element_text(size = 15,  face = "bold"),
+        axis.text.y = element_text(size = 15,  face = "bold"),
+        axis.title.x = element_text(size = 15,  face = "bold"),
+        axis.title.y = element_text(size = 15,  face = "bold"),
+        title = element_blank(),
+        legend.text = element_text(size = 15, face = "bold"))
+
+```
+
+```{r}
+# Get constant to normalize for number of updates and number of queries:
+
+with_freq <- read.csv("experiment_data_03_25_clean_words_with_freq.csv")
+no_freq <- read.csv("experiment_data_03_25_clean_words_no_freq.csv")
+updates = length(no_freq$x)
+items = length(with_freq$query)
+```
+
+
+## Memory, heavy hitters
+
+This plot is for the case where we see, how close the frequencies returned by the estimated heavy hitters list actually are to the true list. 
+
+```{r}
+p <- ggplot(data=data, mapping=aes(x=memory/2^20,y=average_error, colour = factor(precision), group = precision)) +
+  geom_line(size = 1) +
+  geom_point() +
+  scale_y_continuous(trans='log2') +
+  #scale_x_continuous(trans='log2') +
+  labs(title = "Average Error compared to memory for Count Sketch", subtitle = "", x="Memory used (MB)", y="Average Error") +
+  labs(color='Precision') +
+  theme_light() +
+  coord_cartesian(xlim = c(0, 20), ylim = c(2, 0.5 * 10^3)) +
+  my_theme
+
+##ggsave("HH_memory.png", p, width = 15, height = 10, units = "cm")
+p
+```
+
+
+## Update time, heavy hitters
+
+Update time per item, like in CMS and CS
+
+```{r}
+average <-  data %>% group_by(epsilon, precision) %>% dplyr::summarise(across(where(is.numeric), mean))  # not grouping by u, as it is the same throughout
+```
+
+```{r}
+plot_labels <- paste0("1/2^", seq(2,9))
+r <- 1/2^seq(2,9)
+
+
+plot_HH_update_time <- ggplot(data = average, mapping = aes(y = updateTime/updates * 1000, x = 1/precision, colour = factor(epsilon), group = epsilon)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  #scale_y_continuous(trans='log2') +
+  scale_x_continuous(trans='log2',
+                     breaks=r,
+                     labels=parse(text=plot_labels)) +
+  labs(title = "Average update time to delta for Count sketch", subtitle = "", x="precision", y="Average update time\n(microseconds)") +
+  labs(color='Epsilon') +
+  theme_light() +
+  my_theme 
+  #coord_cartesian(xlim = c(0,0.2),ylim = c(500, 1800))
+
+plot_HH_update_time
+##ggsave("HHUpdateTime.png", plot_HH_update_time, width = 15, height = 10, units = "cm")
+```
+
+
+## Query time, heavy hitters
+
+
+Milliseconds
+
+Query time to query list of heavy hitters - not query all elements, like in CMS and CS
+
+```{r}
+plot_labels <- paste0("1/2^", seq(2,9))
+r <- 1/2^seq(2,9)
+
+
+plot_HH_query_time <- ggplot(data = average, mapping = aes(y = queryTime, x = 1/precision, colour = factor(epsilon), group = epsilon)) +
+  geom_line(size = 1.2) +
+  geom_point() +
+  #scale_y_continuous(trans='log2') +
+  scale_x_continuous(trans='log2',
+                     breaks=r,
+                     labels=parse(text=plot_labels)) +
+  labs(title = "Average query time to delta for Count sketch", subtitle = "", x="precision", y="Query time (milliseconds)") +
+  labs(color='Epsilon') +
+  theme_light() +
+  my_theme 
+  #coord_cartesian(xlim = c(0,0.2),ylim = c(500, 1800))
+
+plot_HH_query_time
+
+##ggsave("HHQueryTime.png", plot_HH_query_time, width = 15, height = 10, units = "cm")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
